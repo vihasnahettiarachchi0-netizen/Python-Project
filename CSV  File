@@ -1,0 +1,51 @@
+import csv
+
+FILE_NAME = "database.csv"
+
+SAMPLES =[{"NIC":77008 ,"Full Name":"Maneesha Fernando","Gender" : "F" ,"Bank Name":"Commercial Bank", "Bank Account Number":12344 , "Damage Category": "Fully damaged" , "Compensation Amount":5000000 , "Divisional Sector":"100A1" , "District": "Colombo" },
+    {"NIC":99000 , "Full Name" : "Sadun Senarthne","Gender":"M", "Bank Name":"People's Bank" , "Bank Account Number":2839300 , "Damage Category": "Only Property Damage", "Compensation Amount":1000000 , "Divisional Sector":"100A2" , "District":"Colombo"},
+    {"NIC": 76789 , "Full Name": "Nilushi Hewapathirana" , "Gender":"F" , "Bank Name":"Commercial Bank" , "Bank Account Number":849204, "Damage Category": "Only Flooding" , "Compensation Amount":50000 , "Divisional Sector": "101A1" , "District": "Kandy"}]
+
+CSV_HEADERS = [
+    "NIC",
+    "Full Name",
+    "Gender",
+    "Bank Name",
+    "Bank Account Number",
+    "Damage Category",
+    "Compensation Amount",
+    "Divisional Sector",
+    "District"
+]
+
+def ensure_file_exists():
+    try:
+        open(FILE_NAME, "r")
+        return True
+
+    except FileNotFoundError:
+        pass
+
+    writer = csv.DictWriter(open(FILE_NAME, "w", newline="", encoding="UTF-8"), fieldnames=CSV_HEADERS)
+    writer.writeheader()
+
+    for sample in SAMPLES:
+        print(sample)
+        row = {
+            "NIC": sample["NIC"],
+            "Full Name": sample["Full Name"],
+            "Gender": sample["Gender"],
+            "Bank Name": sample["Bank Name"],
+            "Bank Account Number": sample["Bank Account Number"],
+            "Damage Category": sample["Damage Category"],
+            "Compensation Amount": sample["Compensation Amount"],
+            "Divisional Sector": sample["Divisional Sector"],
+            "District": sample["District"]
+        }
+
+        writer.writerow(row)
+
+    return False
+
+def load_database():
+    ensure_file_exists()
