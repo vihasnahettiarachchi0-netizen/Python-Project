@@ -1,0 +1,341 @@
+import csv
+
+FILE_NAME = "database.csv"
+
+CSV_HEADERS = [
+    "NIC",
+    "Full Name",
+    "Gender",
+    "Bank Name",
+    "Bank Account Number",
+    "Damage Category",
+    "Compensation Amount",
+    "Divisional Sector",
+    "District"
+]
+
+cmd = [
+    {"NIC": 77008, "Full Name": "Maneesha Fernando", "Gender": "F", "Bank Name": "Commercial Bank",
+     "Bank Account Number": 12344, "Damage Category": "Fully damaged", "Compensation Amount": 5000000,
+     "Divisional Sector": "100A1", "District": "Colombo"},
+    {"NIC": 99000, "Full Name": "Sadun Senarthne", "Gender": "M", "Bank Name": "People's Bank",
+     "Bank Account Number": 2839300, "Damage Category": "Only Property Damage", "Compensation Amount": 1000000,
+     "Divisional Sector": "100A2", "District": "Colombo"},
+    {"NIC": 76789, "Full Name": "Nilushi Hewapathirana", "Gender": "F", "Bank Name": "Commercial Bank",
+     "Bank Account Number": 849204, "Damage Category": "Only Flooding", "Compensation Amount": 50000,
+     "Divisional Sector": "101A1", "District": "Kandy"}
+]
+
+Heading = "Welcome to Compensation Management DataBase" #printing the heading
+print(Heading.upper()) #making the letters in the heading capital
+
+
+def ensure_csv_exists():
+    try:  # try to open the csv file in read mode
+        with open(FILE_NAME, "r", encoding="utf-8"):
+            return True #if the file exists return true
+    except FileNotFoundError:
+        with open(FILE_NAME, "w", newline="", encoding="utf-8") as f: #this will open the file in write mode to create a new csv file
+            writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+            writer.writeheader() #to write the header row to the csv file
+        return False
+
+
+def save_to_csv(records):
+    ensure_csv_exists() #makes sure that the csv is existed
+    with open(FILE_NAME, "w", newline="", encoding="utf-8") as f: #open csv in write mode
+        writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+        writer.writeheader() #write the header row to the file
+        for record in records:
+            writer.writerow({    #write each record as a  row  in the csv file
+                "NIC": int(record["NIC"]),
+                "Full Name": record["Full Name"],
+                "Gender": record["Gender"],
+                "Bank Name": record["Bank Name"],
+                "Bank Account Number": int(record["Bank Account Number"]),
+                "Damage Category": record["Damage Category"],
+                "Compensation Amount": int(record["Compensation Amount"]),
+                "Divisional Sector": record["Divisional Sector"],
+                "District": record["District"],
+            })
+
+
+def load_from_csv(default_records):
+    created = not ensure_csv_exists()
+    #check if the csv exists
+
+    if created:
+        save_to_csv(default_records) #if the file just created save default records to new file
+        return default_records #retrun the default records
+
+
+#open the csv in read mode
+    with open(FILE_NAME, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f) #will creat data as dictionaries
+        data = [] #empty list to store records
+        for row in reader:
+            if not row or row.get("NIC") is None or row.get("NIC") == "":  #null values ignored
+                continue
+            row["NIC"] = int(row["NIC"])  #convert into integers
+            row["Bank Account Number"] = int(row["Bank Account Number"])
+            row["Compensation Amount"] = int(row["Compensation Amount"])
+            data.append(row)
+
+#if no valid record were found  in the file
+    if len(data) == 0:
+        save_to_csv(default_records) #save records to the file
+        return default_records
+
+    return data
+    #resturn the data from the csv file
+
+#defining the function to add a new entry
+def insert_new_entry(records):
+    while True:
+        try:
+            nic = int(input("Enter the NIC having Five Digits: "))
+            if 10000 <= nic <= 99999:
+                break
+            print("NIC must be exactly 5 digits.")
+        except ValueError:
+            print("Please enter a valid NIC")
+
+    full_name = input("Enter your Full Name: ")
+
+    gender = input("Enter your Gender: ").lower()
+    if gender in ["male", "m"]:
+        gender = "M"
+    elif gender in ["female", "f"]:
+        gender = "F"
+    else:
+        gender = gender.upper()
+
+    bank_name = input("Enter your Bank Name: ")
+
+    while True:
+        try:
+            bank_account_number = int(input("Enter your Bank Account Number: "))
+            break
+        except ValueError:
+            print("Please enter a valid Bank Account Number")
+
+    # printing the three options  in the damage category
+    while True:
+        print("Select the Damage Category")
+        print(" 1. Fully Damaged")
+        print(" 2. Only Property Damaged")
+        print(" 3. Only Flooding")
+
+        damage_choice = input("Select your choice(1/2/3): ").strip()
+
+        if damage_choice == "1":
+            damage_category = "Fully Damaged"
+            compensation_amount = 5000000
+            break
+        elif damage_choice == "2":
+            damage_category = "Only Property Damaged"
+            compensation_amount = 1000000
+            break
+        elif damage_choice == "3":
+            damage_category = "Only Flooding"
+            compensation_amount = 50000
+            break
+        else:
+            print("Invalid damage category, try again.")
+
+    divisional_sector = input("Enter your Divisional Sector: ")
+    district = input("Enter your District: ")
+
+
+#new records will be added to the list
+    records.append({
+        "NIC": nic,
+        "Full Name": full_name,
+        "Gender": gender,
+        "Bank Name": bank_name,
+        "Bank Account Number": bank_account_number,
+        "Damage Category": damage_category,
+        "Compensation Amount": compensation_amount,
+        "Divisional Sector": divisional_sector,
+        "District": district
+    })
+
+    save_to_csv(records) #to save all records to csv file
+    return records #updated list will be return
+
+# defining the function to delete a record
+def delete_record(records):
+    while True:
+        try:
+            nic = int(input("Enter the NIC to remove: "))
+            break
+        except ValueError:
+            print("Please enter a valid NIC")
+
+    for record in records:
+        if int(record["NIC"]) == nic:
+            records.remove(record)
+            save_to_csv(records)
+            print("NIC has been removed")
+            return records
+
+    print("Record not found")
+    return records
+
+
+def update(records):
+    while True:
+        try:
+            nic = int(input("Enter the NIC you want to update: "))
+            break
+        except ValueError:
+            print("Please enter a valid NIC")
+
+    for record in records:
+        if int(record["NIC"]) == nic:
+            print("1.NIC")
+            print("2.Full Name")
+            print("3.Gender")
+            print("4.Bank Name")
+            print("5.Bank Account Number")
+            print("6.Damage Category")
+            print("7.Divisional Sector")
+            print("8.District")
+
+            option = input("Enter your choice(1/2/3/4/5/6/7/8): ").strip()
+
+            if option == "1":
+                record["NIC"] = int(input("Enter the NIC: "))
+            elif option == "2":
+                record["Full Name"] = input("Enter the Full Name: ")
+            elif option == "3":
+                record["Gender"] = input("Enter the Gender (M/F): ").upper()
+            elif option == "4":
+                record["Bank Name"] = input("Enter the Bank Name: ")
+            elif option == "5":
+                record["Bank Account Number"] = int(input("Enter the Account Number: "))
+            elif option == "6":
+                record["Damage Category"] = input("Enter the Damage Category: ")
+            elif option == "7":
+                record["Divisional Sector"] = input("Enter the Divisional Sector: ")
+            elif option == "8":
+                record["District"] = input("Enter the District: ")
+            else:
+                print("Invalid choice")
+                return records
+
+            save_to_csv(records)
+            print("Record Updated Successfully")
+            display(records)
+            return records
+
+    print("Record not found")
+    return records
+
+
+def search(records):
+    print("Choose the field")
+    print("1. NIC")
+    print("2. Full Name")
+    print("3. Gender")
+    print("4. Bank Name")
+    print("5. Bank Account Number")
+    print("6. Damage Category")
+    print("7. Divisional Sector")
+    print("8. District")
+
+    option = input("Enter your choice(1/2/3/4/5/6/7/8): ").strip()
+    search_value = input("What you want to search? ").strip()
+
+    field_map = {   ##map the users choice with the actual records
+        "1": "NIC",
+        "2": "Full Name",
+        "3": "Gender",
+        "4": "Bank Name",
+        "5": "Bank Account Number",
+        "6": "Damage Category",
+        "7": "Divisional Sector",
+        "8": "District"
+    }
+
+    if option not in field_map: #check if the choice is valid
+        print("Invalid choice")
+        return
+
+    field = field_map[option]  #get the actual field name ot search
+    matches = []
+
+    for record in records:
+        if field in ["NIC", "Bank Account Number", "Compensation Amount"]:
+            try:
+                if int(record[field]) == int(search_value): #numerical fields checking
+                    matches.append(record)
+            except ValueError:
+                pass
+        else:
+            if str(record[field]).lower() == search_value.lower(): #nonnumerical fields checking
+                matches.append(record)
+
+    if len(matches) == 0:
+        print("No records found.")
+        return
+
+    display(matches)  #will display the matching records
+
+
+def display(records):
+    total_compensation = 0
+    print("The Compensation Management DataBase")
+    print(  #to print headers
+        f"{'NIC':<8}| {'Full Name':<22} |{'Gender':<10}|{'Bank Name':<18}|"
+        f"{'Bank Account Number':<20}| {'Damage Category':<22}| {'Compensation Amount':<20}|"
+        f" {'Divisional Sector':<18}|{'District':<10}"
+    )
+
+    for record in records:
+        total_compensation += int(record["Compensation Amount"])
+        print(
+            f"{int(record['NIC']):<8} {record['Full Name']:<22} {record['Gender']:<10} "
+            f"{record['Bank Name']:<18} {int(record['Bank Account Number']):>20} "
+            f"{record['Damage Category']:>25} {int(record['Compensation Amount']):>20} "
+            f"{record['Divisional Sector']:>15} {record['District']:>12}"
+        )
+
+    print("-" * 150)
+    print(f"Total Compensation:{total_compensation:>110}")
+    print("-" * 150)
+
+
+# load records from csv (no global)
+cmd = load_from_csv(cmd)
+
+while True:
+    print("1.Insert a new Record")
+    print("2.Remove Record")
+    print("3.Search for a Record")
+    print("4.Update Record")
+    print("5.Display Record")
+
+    option = input("Enter your choice: ").strip()
+
+    if option == "1":
+        cmd = insert_new_entry(cmd)
+        display(cmd)
+
+    elif option == "2":
+        cmd = delete_record(cmd)
+        display(cmd)
+
+    elif option == "3":
+        search(cmd)
+
+    elif option == "4":
+        cmd = update(cmd)
+
+    elif option == "5":
+        display(cmd)
+
+    else:
+        print("Invalid choice")
+
+
